@@ -13,6 +13,14 @@ package jnigi
 #define JNI_VERSION_1_8 0x00010008
 #endif
 
+#ifndef JNI_VERSION_9
+#define JNI_VERSION_9   0x00090000
+#endif
+
+#ifndef JNI_VERSION_10
+#define JNI_VERSION_10  0x000a0000
+#endif
+
 jclass FindClass(JNIEnv* env, char* name) {
 	return (*env)->FindClass (env, name);
 }
