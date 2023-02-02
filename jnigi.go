@@ -3,33 +3,32 @@
 // license that can be found in the LICENSE file.
 
 /*
-	JNIGI (Java Native Interface Go Interface)
+JNIGI (Java Native Interface Go Interface)
 
-	A package to access Java from Go code.
+A package to access Java from Go code.
 
-	All constructor and method call functions convert parameter arguments and return values.
+All constructor and method call functions convert parameter arguments and return values.
 
-	Arguments are converted from Go to Java if:
-	  - The type is Go built in type and there is an equivalent Java primitive type.
-	  - The type is a slice of such a Go built in type.
-	  - The type implements the ToJavaConverter interface
-	Return values are converted from Java to Go if:
-	  - The type is a Java primitive type.
-	  - The type is a Java array of a primitive type.
-	  - The type implements the ToGoConverter interface
+Arguments are converted from Go to Java if:
+  - The type is Go built in type and there is an equivalent Java primitive type.
+  - The type is a slice of such a Go built in type.
+  - The type implements the ToJavaConverter interface
 
+Return values are converted from Java to Go if:
+  - The type is a Java primitive type.
+  - The type is a Java array of a primitive type.
+  - The type implements the ToGoConverter interface
 
-	Go Builtin to/from Java Primitive:
+Go Builtin to/from Java Primitive:
 
-		bool			Boolean
-		byte			Byte
-		int16			Short
-		uint16			Char
-		int				Int (also int32 -> Int)
-		int64			Long
-		float32			Float
-		float64			Double
-
+	bool			Boolean
+	byte			Byte
+	int16			Short
+	uint16			Char
+	int				Int (also int32 -> Int)
+	int64			Long
+	float32			Float
+	float64			Double
 */
 package jnigi
 
@@ -179,15 +178,32 @@ func CreateJVM(jvmInitArgs *JVMInitArgs) (*JVM, *Env, error) {
 	return jvm, env, nil
 }
 
+// Must call runtime.LockOSThread() first.
+func GetJVMs() (int, error) {
+	var len jsize = 128
+
+	u := unsafe.Sizeof((unsafe.Pointer)(nil))
+	vmBuf := malloc(u * uintptr(len))
+	defer free(vmBuf)
+	var n jsize
+
+	if jni_GetCreatedJavaVMs(vmBuf, len, &n) < 0 {
+		return 0, errors.New("Couldn't get JVMs")
+	}
+
+	return int(n), nil
+}
+
 // UseJVM initialized jnigi with an existing JVM.
 //
 // This is important for Android, where the existing JVM must be used when running inside an
 // Android app--i.e. Go code built as a shared library.
 //
 // An existing JVM may be obtained through a JNI call made by the JVM after System.loadLibrary:
-//   JNIEXPORT void JNICALL Java_foo_bar_Baz_00024_funcName(JNIEnv *env, jobject thiz) {
-//     // Pass env, thiz and the result of (*env)->GetJavaVM() into Go, then UseJVM()
-//   }
+//
+//	JNIEXPORT void JNICALL Java_foo_bar_Baz_00024_funcName(JNIEnv *env, jobject thiz) {
+//	  // Pass env, thiz and the result of (*env)->GetJavaVM() into Go, then UseJVM()
+//	}
 //
 // If 'thiz' is specified, its class loader will be used to find non-system classes.
 // This should pick up custom classes, as well as libraries from dependencies { } in build.gradle.

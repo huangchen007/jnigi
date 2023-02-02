@@ -5,8 +5,8 @@
 package jnigi
 
 import (
-	"testing"
 	"runtime"
+	"testing"
 )
 
 var env *Env
@@ -25,7 +25,7 @@ func TestAll(t *testing.T) {
 	PTestEnsureLocalCapacity(t)
 	PTestPushPopLocalFrame(t)
 	PTestHandleException(t)
-	PTestCast(t)	
+	PTestCast(t)
 	PTestDestroy(t)
 }
 
@@ -37,14 +37,14 @@ func PTestInit(t *testing.T) {
 		t.Fatal(err)
 	}
 	runtime.LockOSThread()
-	jvm2, e2, err := CreateJVM(NewJVMInitArgs(false, true, DEFAULT_VERSION, []string{"-Xcheck:jni"}))
-	if err != nil {
-		t.Fatal(err)
-	}
-	env = e2
-	jvm = jvm2
+	// jvm2, e2, err := CreateJVM(NewJVMInitArgs(false, true, DEFAULT_VERSION, []string{"-Xcheck:jni"}))
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+	// env = e2
+	// jvm = jvm2
 
-	t.Logf("%x", e2.jniEnv)
+	// t.Logf("%x", e2.jniEnv)
 
 }
 
@@ -320,7 +320,7 @@ func PTestByteArray(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	arr := NewArrayRef(Byte|Array)
+	arr := NewArrayRef(Byte | Array)
 	if err := str.CallMethod(env, "getBytes", arr, env.GetUTF8String()); err != nil {
 		t.Fatal(err)
 	}
@@ -524,5 +524,11 @@ func PTestCast(t *testing.T) {
 	var goBytes []byte
 	if err := c.Cast("java/lang/String").CallMethod(env, "getBytes", &goBytes, env.GetUTF8String()); err != nil {
 		t.Fatal(err)
-	}	
+	}
+}
+
+func TestGetJVMFromPID(t *testing.T) {
+	PTestInit(t)
+	GetJVMs()
+
 }

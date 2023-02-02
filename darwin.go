@@ -30,6 +30,18 @@ jint dyn_JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *args) {
     return var_JNI_CreateJavaVM(pvm, penv, args);
 }
 
+typedef jint (*type_JNI_GetCreatedJavaVMs)(JavaVM **, jsize, jsize*);
+
+type_JNI_GetCreatedJavaVMs var_JNI_GetCreatedJavaVMs;
+
+jint dyn_JNI_GetCreatedJavaVMs(JavaVM **vmBuf, jsize bufLen, jsize *nVMs) {
+    return var_JNI_GetCreatedJavaVMs(vmBuf, bufLen, nVMs);
+}
+
+JavaVM * VMPtrAt(JavaVM **vmBuf, jint idx){
+		return vmBuf[idx];
+}
+
 // call back for dummy source used to make sure the CFRunLoop doesn't exit right away
 // This callback is called when the source has fired.
 void jnigiCFRSourceCallBack (  void *info  ) {
@@ -81,6 +93,14 @@ func jni_GetDefaultJavaVMInitArgs(args unsafe.Pointer) jint {
 
 func jni_CreateJavaVM(pvm unsafe.Pointer, penv unsafe.Pointer, args unsafe.Pointer) jint {
 	return jint(C.dyn_JNI_CreateJavaVM((**C.JavaVM)(pvm), (*unsafe.Pointer)(penv), (unsafe.Pointer)(args)))
+}
+
+func jni_GetCreatedJavaVMs(pvm unsafe.Pointer, len jsize, nVMs *jsize) jint {
+	return jint(C.dyn_JNI_GetCreatedJavaVMs((**C.JavaVM)(pvm), C.jsize(len), (*C.jsize)(nVMs)))
+}
+
+func VMPtrAt(pvm unsafe.Pointer, idx int) unsafe.Pointer {
+	return unsafe.Pointer(C.VMPtrAt((**C.JavaVM)(pvm), C.jint(idx)))
 }
 
 // LoadJVMLib loads libjvm.dyo as specified in jvmLibPath
@@ -136,6 +156,15 @@ func LoadJVMLib(jvmLibPath string) error {
 		return errors.New("could not find JNI_CreateJavaVM in libjvm.dylib")
 	}
 	C.var_JNI_CreateJavaVM = C.type_JNI_CreateJavaVM(ptr)
+
+	cs4 := cString("JNI_GetCreatedJavaVMs")
+	defer free(cs4)
+	ptr = C.dlsym(unsafe.Pointer(libHandle), (*C.char)(cs4))
+	if ptr == nil {
+		return errors.New("could not find JNI_GetCreatedJavaVMs in libjvm.dylib")
+	}
+	C.var_JNI_GetCreatedJavaVMs = C.type_JNI_GetCreatedJavaVMs(ptr)
+
 	return nil
 }
 

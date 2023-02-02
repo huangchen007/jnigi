@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
-	"tekao.net/jnigi"
+
 	"log"
 	"runtime"
+
+	"github.com/huangchen007/jnigi"
 )
 
 func main() {
@@ -12,6 +14,7 @@ func main() {
 		log.Fatal(err)
 	}
 	runtime.LockOSThread()
+
 	jvm, env, err := jnigi.CreateJVM(jnigi.NewJVMInitArgs(false, true, jnigi.DEFAULT_VERSION, []string{"-Xcheck:jni"}))
 	if err != nil {
 		log.Fatal(err)
